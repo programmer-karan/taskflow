@@ -1,0 +1,5 @@
+services:
+  postgress:
+    image: postgress:15
+    ports:
+      -"5432:5432"

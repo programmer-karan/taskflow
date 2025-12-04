@@ -1,8 +1,7 @@
-# src/auth/models.py
 from datetime import datetime
 from sqlalchemy import String, Boolean, func
 from sqlalchemy.orm import mapped_column, Mapped
-from src.shared.dependencies import Base
+from src.shared.database import Base
 
 
 class User(Base):

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 class UserCreate(BaseModel):
@@ -13,3 +14,11 @@ class UserResponse(BaseModel):
     
     # This tells Pydantic to read data from SQLAlchemy model
     model_config = ConfigDict(from_attributes=True)
+    
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+
+class TokenData(BaseModel):
+    sub: Optional[str] = None

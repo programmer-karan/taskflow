@@ -1,5 +1,6 @@
 import src.auth.models
-from src.shared.dependencies import DATABASE_URL, Base
+import src.tasks.models
+from src.shared.database import DATABASE_URL, Base
 import asyncio
 import os
 import sys

@@ -11,3 +11,5 @@ asyncpg
 sqlalchemy
 greenlet
 alembic
+python-multipart
+python-jose

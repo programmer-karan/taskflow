@@ -8,7 +8,8 @@ UVICORN_APP := src.main:app
 UVICORN_HOST := localhost
 UVICORN_PORT := 8000
 
-.PHONY: help venv install run test docker-up docker-down shell clean
+# Added migration and apply-db to PHONY
+.PHONY: help venv install run test docker-up docker-down shell clean migration apply-db
 
 help:
 	@echo "Available commands:"
@@ -16,6 +17,8 @@ help:
 	@echo "  make run           Run local server"
 	@echo "  make test          Run tests"
 	@echo "  make docker-up     Start DB & Redis"
+	@echo "  make migration     Generate a new migration (usage: make migration msg='init')"
+	@echo "  make apply-db      Apply pending migrations to DB"
 	@echo "  make shell         Open a shell with venv activated"
 	@echo "  make clean         Cleanup"
 
@@ -46,9 +49,9 @@ docker-up:
 	docker compose up -d postgres redis
 
 docker-down:
+    # Stop containers but keep volumes (data)
 	docker compose down
 
-# Open an interactive shell with venv activated (activation persists inside that shell)
 shell: venv
 	@echo "Opening a bash shell with $(VENV) activated..."
 	@bash -i -c "source $(VENV)/bin/activate && exec bash"
@@ -57,3 +60,17 @@ clean:
 	@rm -rf $(VENV)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + || true
 	@echo "Cleaned"
+
+# -----------------------------
+# Database Migrations (Alembic)
+# -----------------------------
+# Usage: make migration msg="describe_changes"
+migration: install docker-up
+	@if [ -z "$(msg)" ]; then echo "Error: msg is undefined. Usage: make migration msg='your message'"; exit 1; fi
+	@echo "Generating migration..."
+	@$(PY) -m alembic revision --autogenerate -m "$(msg)"
+
+# Usage: make apply-db
+apply-db: install docker-up
+	@echo "Applying migrations to database..."
+	@$(PY) -m alembic upgrade head

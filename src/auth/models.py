@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import String, Boolean, func
 from sqlalchemy.orm import mapped_column, Mapped
-from ..shared.dependencies import Base
+from src.shared.dependencies import Base
 
 
 class User(Base):

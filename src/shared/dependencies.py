@@ -14,21 +14,20 @@ from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()  # reads .env file
 
+# 1. Build the Connection String
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD", "password"))
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "taskflow")
 
+# Logic: Use full URL if provided, otherwise build it from parts
 DATABASE_URL = (
     os.getenv("DATABASE_URL")
     or f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 )
 
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-
+# 2. Setup Naming Convention (Crucial for Alembic constraints)
 naming_convention = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -39,10 +38,16 @@ naming_convention = {
 
 metadata = MetaData(naming_convention=naming_convention)
 
+# 3. Define Base here to avoid circular imports
+
 
 class Base(DeclarativeBase):
     metadata = metadata
 
+
+# 4. Create Engine
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set. Check your .env file.")
 
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
@@ -53,7 +58,7 @@ engine: AsyncEngine = create_async_engine(
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
-    expire_on_commit=False,  # convenient for web apps
+    expire_on_commit=False,
     class_=AsyncSession,
 )
 
@@ -64,14 +69,3 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     async with AsyncSessionLocal() as session:
         yield session
-
-
-# async def create_db_and_tables(Base: DeclarativeBase) -> None:
-#     """
-#     Run Once (dev) to create all tables from SQLAlchemy models.
-#     """
-
-#     async with engine.begin() as conn:
-#         # run_sync runs the sync create_all on the sync MetaData
-
-#         await conn.run_sync(Base.metadata.create_all)

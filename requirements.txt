@@ -16,3 +16,5 @@ python-jose
 boto3
 celery
 redis
+fastapi-cache2[redis]
+slowapi

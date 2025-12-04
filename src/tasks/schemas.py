@@ -3,7 +3,8 @@ from pydantic import BaseModel, ConfigDict
 
 class TaskCreate(BaseModel):
     title: str
-    description: str | None
+    # The None here makes the field optional in JSON.
+    description: str | None = None
 
 class TaskResponse(BaseModel):
     id: int

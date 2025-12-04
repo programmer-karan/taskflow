@@ -56,3 +56,25 @@ async def test_create_task(client: AsyncClient):
     data = response.json()
     assert data["title"] == "Automated Test Task"
     assert data["owner_id"] is not None
+
+
+@pytest.mark.asyncio
+async def test_pagination(client: AsyncClient):
+    # 1. Setup
+    email = "pagination@example.com"
+    password = "password"
+    await client.post("/auth/register", json={"email": email, "password": password})
+    login_res = await client.post("/auth/token", data={"username": email, "password": password})
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2. Create 15 tasks with Assertion
+    for i in range(15):
+        res = await client.post("/tasks/", json={"title": f"Task {i}"}, headers=headers)
+        # DEBUG: Stop immediately if creation fails
+        assert res.status_code == 201, f"Failed to create Task {i}: {res.text}"
+
+    # 3. Test Limit
+    response = await client.get("/tasks/?limit=5&skip=0", headers=headers)
+    data = response.json()
+    assert len(data) == 5

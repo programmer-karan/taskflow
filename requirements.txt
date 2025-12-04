@@ -3,3 +3,11 @@ uvicorn
 pytest
 httpx
 pytest-asyncio
+PyJWT
+pwdlib[argon2]
+python-dotenv
+pydantic[email]
+asyncpg
+sqlalchemy
+greenlet
+alembic

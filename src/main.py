@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import os
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
+from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter
 from src.auth.models import Base
 from src.auth.router import router as auth_router
@@ -17,6 +18,7 @@ from slowapi.errors import RateLimitExceeded
 # lifespan defination
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
     redis = aioredis.from_url(REDIS_URL)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     yield
@@ -32,8 +34,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app = FastAPI(tiltle="Taskflow API")
 
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-
 # include the router
 app.include_router(auth_router)
 app.include_router(task_router)
@@ -42,3 +42,9 @@ app.include_router(file_router)
 @app.get("/")
 def root():
     return {"message": "The server is working!"}
+
+
+# Initialize Prometheus Instrumentator and expose /metrics
+instrumentator = Instrumentator()
+# instrument the app and expose the /metrics endpoint
+instrumentator.instrument(app).expose(app)

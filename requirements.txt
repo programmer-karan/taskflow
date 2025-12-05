@@ -18,3 +18,4 @@ celery
 redis
 fastapi-cache2[redis]
 slowapi
+prometheus-fastapi-instrumentator

@@ -12,7 +12,7 @@ from src.shared.rate_limit import limiter
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post('/register', status_code=201, response_model=UserResponse)
-@limiter.limit("5/minute")
+# @limiter.limit("5/minute")
 async def register(
     request: Request,
     payload: UserCreate, 
@@ -41,7 +41,7 @@ async def register(
 
 
 @router.post("/token", response_model=Token)
-@limiter.limit("5/minute")
+# @limiter.limit("5/minute")
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),

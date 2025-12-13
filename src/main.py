@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 import os
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
-from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter
 from src.auth.models import Base
 from src.auth.router import router as auth_router
@@ -24,27 +23,20 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 # Attach to App (Not Router!)
-app = FastAPI(title="TaskFlow API",lifespan=lifespan)
+app = FastAPI(title="TaskFlow API",lifespan=lifespan,routes=[
+    auth_router,task_router, file_router
+])
 
 # Attach to App 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-app = FastAPI(tiltle="Taskflow API")
 
 
 # include the router
-app.include_router(auth_router)
-app.include_router(task_router)
-app.include_router(file_router)
+
 
 @app.get("/")
 def root():
     return {"message": "The server is working!"}
-
-
-# Initialize Prometheus Instrumentator and expose /metrics
-instrumentator = Instrumentator()
-# instrument the app and expose the /metrics endpoint
-instrumentator.instrument(app).expose(app)

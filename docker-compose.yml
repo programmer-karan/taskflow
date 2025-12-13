@@ -1,4 +1,5 @@
 services:
+  # 1. Database
   postgres:
     image: postgres:15
     ports:
@@ -15,6 +16,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # 2. Caching & Message Queue
   redis:
     image: redis:alpine
     ports:
@@ -27,6 +29,8 @@ services:
       timeout: 5s
       retries: 5
 
+  # 3. File Storage (S3 Compatible)
+  # Kept this because your "Attachments" feature likely depends on it.
   minio:
     image: minio/minio
     ports:
@@ -38,72 +42,6 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
-
-  # --- Monitoring Stack ---
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    # Note: We can now target 'app:8000' directly instead of host.docker.internal
-
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-  
-  loki:
-    image: grafana/loki:latest
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-
-  # --- Application Stack ---
-  app:
-    build: .
-    container_name: taskflow-api
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/taskflow
-      - REDIS_URL=redis://redis:6379/0
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-      - SECRET_KEY=dev-secret-key
-    volumes:
-      - .:/app
-    # Run the API
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-
-  worker:
-    build: .
-    container_name: taskflow-worker
-    depends_on:
-      app:
-        condition: service_started
-      redis:
-        condition: service_healthy
-    environment:
-      # Worker needs same env as App to talk to DB/Redis
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/taskflow
-      - REDIS_URL=redis://redis:6379/0
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-      - SECRET_KEY=dev-secret-key
-    volumes:
-      - .:/app
-    # Run the Celery Worker
-    command: celery -A src.shared.celery_app worker --loglevel=info
 
 volumes:
   postgres_data:

@@ -1,25 +1,23 @@
-# 1. Base Image: Use a lightweight Python Linux image
+# 1. Base Image
 FROM python:3.11-slim
 
-# 2. Setup Environment Variables
-# - Convert stdout/stderr to unbuffered (logs show up immediately)
-# - Don't create .pyc files
+# 2. Environment Variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# 3. Set Working Directory
-WORKDIR /app
+# 3. Working Directory
+WORKDIR /src
 
-# 4. Install Dependencies (Cached Layer)
-# We copy requirements first so Docker caches the installation step
+# 4. Install Dependencies
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # 5. Copy Source Code
 COPY . .
 
-# 6. Expose the port
+# 6. Expose Port
 EXPOSE 8000
 
-# 7. Command to run the app
+# 7. Start Command
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

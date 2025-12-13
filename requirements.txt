@@ -1,8 +1,5 @@
 fastapi
 uvicorn
-pytest
-httpx
-pytest-asyncio
 PyJWT
 pwdlib[argon2]
 python-dotenv
@@ -18,4 +15,3 @@ celery
 redis
 fastapi-cache2[redis]
 slowapi
-prometheus-fastapi-instrumentator
